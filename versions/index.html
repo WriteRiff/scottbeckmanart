@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Pick a look | Scott Beckman Art</title>
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; font: 17px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background: #f2f2f0; color: #1b1b1b; }
+  main { max-width: 960px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 .3em; }
+  p.lead { color: #555; margin: 0 0 28px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+  a.card { display: block; text-decoration: none; color: inherit; background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); transition: transform .25s ease, box-shadow .25s ease; }
+  a.card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,.12); }
+  .swatch { height: 140px; }
+  .card div.t { padding: 16px 18px 20px; }
+  .card strong { display: block; font-size: 1.15rem; }
+  .card span { color: #555; font-size: .95rem; }
+  @media (prefers-reduced-motion: reduce) { a.card { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Three new looks</h1>
+  <p class="lead">Same paintings and words, three different designs. Open each one, scroll around, and try it on your phone too.</p>
+  <div class="grid">
+    <a class="card" href="../v1/"><div class="swatch" style="background:radial-gradient(circle at 50% 45%,#5a4a3a 0,#14110e 70%)"></div><div class="t"><strong>Look 1 · Night Gallery</strong><span>Dark and dramatic, like a museum after hours.</span></div></a>
+    <a class="card" href="../v2/"><div class="swatch" style="background:linear-gradient(120deg,#e9e3d6 0 55%,#4c4277 55% 100%)"></div><div class="t"><strong>Look 2 · Studio Journal</strong><span>A magazine-style story about the painter and his studio.</span></div></a>
+    <a class="card" href="../v3/"><div class="swatch" style="background:linear-gradient(90deg,#f3c63f,#9d8be0,#7fb6a4)"></div><div class="t"><strong>Look 3 · Color Field</strong><span>Bright and modern; each painting's colors set the mood.</span></div></a>
+  </div>
+</main>
+</body>
+</html>
