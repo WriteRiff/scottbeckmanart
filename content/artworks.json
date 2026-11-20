@@ -1,0 +1,33 @@
+{
+  "_how_to": "Order here = order on the site. Add a painting: add its original to tools/make_images.py, run it, add an entry here, run tools/build.py.",
+  "artworks": [
+    {"slug": "wild-radiance", "title": "Wild Radiance", "size": "30 × 40 in", "subject": "florals", "featured": true,
+     "alt": "Oil painting of purple anemone flowers glowing in sunlight against a swirling, textured background"},
+    {"slug": "yellow-flowers", "title": "Yellow Flowers", "size": "24 × 36 in", "subject": "florals", "featured": true,
+     "alt": "Oil painting of bright yellow coreopsis flowers against a dark background"},
+    {"slug": "majestic-horse", "title": "Majestic Horse", "size": "24 × 36 in", "subject": "animals", "featured": true,
+     "alt": "Oil painting of a brown and white horse's head emerging from a dark background"},
+    {"slug": "old-barn", "title": "Old Barn", "size": "16 × 20 in", "subject": "landscapes", "featured": true,
+     "medium": "Oil on canvas, 2024", "available": true, "price": "$875",
+     "frame": "Framed by Scott in oak from his own land: stained dark grey, painted white and antiqued (18 × 22 in, 2.25 in deep).",
+     "photos": ["old-barn-framed", "old-barn-frame", "old-barn-2", "old-barn-3"],
+     "alt": "Oil painting of a weathered barn in a wide green field under a grey sky"},
+    {"slug": "pig", "title": "Pig", "size": "28 × 28 in", "subject": "animals", "featured": true,
+     "alt": "Oil painting of a pink and white pig's face looking out of a dark background"},
+    {"slug": "white-flowers", "title": "White Flowers", "size": "30 × 40 in", "subject": "florals", "featured": true,
+     "alt": "Oil painting of white dogwood blossoms against a soft blue sky"},
+    {"slug": "my-son", "title": "My Son", "size": "24 × 36 in", "subject": "portraits",
+     "alt": "Oil painting of a baby sleeping peacefully in a crib beside colorful toy blocks"},
+    {"slug": "yellow-house", "title": "Yellow House", "size": "18 × 24 in", "subject": "landscapes",
+     "medium": "Oil on panel, 2024", "available": true, "price": "$1,150",
+     "frame": "Framed by Scott in oak from his own land, stained grey for a deep brown finish (20 × 24 in, 2.25 in deep).",
+     "photos": ["yellow-house-framed", "yellow-house-frame", "yellow-house-detail", "yellow-house-3"],
+     "alt": "Oil painting of a small yellow house on a rocky hillside under a dark, stormy sky"},
+    {"slug": "bliss-birds", "title": "Bliss Birds", "size": "18 × 24 in", "subject": "animals",
+     "alt": "Oil painting of two yellow birds perched together on a branch"},
+    {"slug": "purple-flowers", "title": "Purple Flowers", "size": "24 × 48 in", "subject": "florals",
+     "alt": "Oil painting of pale purple and white phlox blossoms"},
+    {"slug": "lady", "title": "Lady", "size": "11 × 14 in", "subject": "animals",
+     "alt": "Oil painting of a red ladybug on a green stem beside a yellow bud"}
+  ]
+}
