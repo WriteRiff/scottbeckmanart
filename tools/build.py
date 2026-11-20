@@ -5,7 +5,7 @@ Each page keeps its own text. Between marker comments like
 <!-- HEADER --> ... <!-- /HEADER --> this script rewrites the header, footer,
 painting grids and the "available originals" cards. Safe to run any time.
 """
-import html, json, os, re
+import html, json, os, re, urllib.parse
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 data = json.load(open(os.path.join(ROOT, "content", "artworks.json"), encoding="utf-8"))
@@ -77,12 +77,13 @@ def available_cards(pre):
             f'<a {link_attrs(p, pre, a["title"], meta_of(a))}><img {img_attrs(p, pre)} alt="{e(a["alt"] if i == 0 else a["title"] + ", photo of the painting in its handmade frame")}" loading="lazy" decoding="async"></a>'
             for i, p in enumerate(photos))
         hidden = "".join(f'<a {link_attrs(p, pre, a["title"], meta_of(a))} hidden></a>' for p in extra)
-        price = f'<p class="price">{e(a["price"])}</p>' if a.get("price") and SHOW_PRICES else ""
+        price = (f'<p class="price">{e(a["price"])}</p>' if a.get("price") and SHOW_PRICES
+                 else '<p class="status">Available, ask about it</p>')
         out.append(
             f'<article><div class="photos" data-gallery>{links}{hidden}</div><div class="body">'
             f'<h3>{e(a["title"])}</h3><p class="specs">{e(a.get("medium", "Oil painting"))} · {e(a["size"])}</p>'
             f'{price}<p>{e(a["frame"])}</p>'
-            f'<a class="btn ghost" href="{pre}contact/" data-mail data-subject="About the painting &quot;{e(a["title"])}&quot;">Ask about this painting</a>'
+            f'<a class="btn ghost" href="{pre}contact/?painting={urllib.parse.quote(a["title"])}#message">Ask about this painting</a>'
             f'</div></article>')
     return '<div class="available">' + "".join(out) + "</div>"
 

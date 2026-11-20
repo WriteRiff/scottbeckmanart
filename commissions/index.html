@@ -135,16 +135,19 @@
       <p class="eyebrow">Let’s create art together</p>
       <h2>Start your commission</h2>
       <p>Tell Scott a little about what you have in mind and he’ll be in touch.</p>
-      <form class="form" data-mailto="Commission inquiry">
+      <form class="form" data-form="Commission inquiry">
         <div><label for="c-name">Your name *</label><input id="c-name" name="name" autocomplete="name" required></div>
+        <div><label for="c-email">Your email *</label><input id="c-email" name="email" type="email" autocomplete="email" required></div>
         <div><label for="c-phone">Phone</label><input id="c-phone" name="phone" type="tel" autocomplete="tel"></div>
         <div><label for="c-size">Size</label>
           <select id="c-size" name="size"><option value="">Not sure yet</option><option>11 × 14 in</option><option>16 × 20 in</option><option>18 × 24 in</option><option>24 × 36 in</option><option>30 × 40 in</option><option>24 × 48 in</option><option>Custom size</option></select></div>
-        <div><label for="c-delivery">How you’ll receive it</label>
+        <div class="full"><label for="c-delivery">How you’ll receive it</label>
           <select id="c-delivery" name="delivery"><option value="">Choose one</option><option>Pickup in Central Arkansas</option><option>Shipping in the USA</option><option>International shipping</option><option>Artist delivered</option></select></div>
         <div class="full"><label for="c-msg">Your vision *</label><textarea id="c-msg" name="message" required placeholder="What would you like painted? When do you need it? Is there a hidden message you'd like in it?"></textarea></div>
-        <div class="full"><button class="btn" type="submit">Write the email</button>
-          <p class="note">This opens your own email app with your answers filled in, ready to send to Scott. Nothing you type is stored on this website.</p></div>
+        <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+        <div class="full"><button class="btn" type="submit">Send to Scott</button>
+          <p class="note">Your answers go to Scott by email through Formspree, a form service. They're used only to reply to you about your commission.</p>
+          <p class="form-status" role="status" aria-live="polite"></p></div>
       </form>
     </div>
   </section>

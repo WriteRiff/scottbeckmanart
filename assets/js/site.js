@@ -1,48 +1,50 @@
-/* Scott Beckman Art — small site helpers (no tracking, no outside services). */
+/* Scott Beckman Art — small site helpers (no tracking, no cookies). */
 (function () {
-  // ---- Contact email: the one place to change it. Split in two so simple spam bots don't read it. ----
-  var EMAIL_USER = "";   // e.g. "hello"
-  var EMAIL_DOMAIN = ""; // e.g. "scottbeckmanart.com"
-  var EMAIL = EMAIL_USER && EMAIL_DOMAIN ? EMAIL_USER + "@" + EMAIL_DOMAIN : "";
-  window.SBA_EMAIL = EMAIL;
-
-  function mailto(subject, body) {
-    var q = [];
-    if (subject) q.push("subject=" + encodeURIComponent(subject));
-    if (body) q.push("body=" + encodeURIComponent(body));
-    return "mailto:" + EMAIL + (q.length ? "?" + q.join("&") : "");
-  }
-
-  document.querySelectorAll("[data-mail]").forEach(function (a) {
-    if (!EMAIL) return; // falls back to the Contact page link in the HTML
-    a.href = mailto(a.getAttribute("data-subject") || "");
-    if (a.hasAttribute("data-show-address")) a.textContent = EMAIL;
-  });
+  // ---- Form service: the one place to change it. ----
+  // Formspree form address, like "https://formspree.io/f/abcdwxyz" (shown on the form's page in Formspree).
+  // Not a secret: it's meant to sit in a public web page.
+  var FORM_ENDPOINT = "";
 
   // ---- Year in the footer ----
   document.querySelectorAll("[data-year]").forEach(function (el) { el.textContent = new Date().getFullYear(); });
 
-  // ---- Forms that write an email instead of sending data to a server ----
-  document.querySelectorAll("form[data-mailto]").forEach(function (form) {
+  // ---- "Ask about this painting" opens the contact form with the title filled in ----
+  var params = new URLSearchParams(location.search);
+  var painting = params.get("painting");
+  var msg = document.getElementById("m-msg");
+  if (painting && msg && !msg.value) msg.value = "Hi Scott, I'm interested in \"" + painting + "\". ";
+
+  // ---- Forms: send to Formspree, show the result on the page ----
+  document.querySelectorAll("form[data-form]").forEach(function (form) {
+    var status = form.querySelector(".form-status");
+    var button = form.querySelector("button[type=submit]");
+    function say(text, ok) {
+      if (!status) return;
+      status.textContent = text;
+      status.className = "form-status " + (ok ? "ok" : "err");
+    }
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       if (!form.reportValidity()) return;
-      var lines = [];
-      var name = "";
-      form.querySelectorAll("input, select, textarea").forEach(function (f) {
-        if (!f.name || !f.value) return;
-        var label = form.querySelector('label[for="' + f.id + '"]');
-        var text = label ? label.textContent.replace(/\s*\*$/, "").trim() : f.name;
-        if (f.name === "name") name = f.value;
-        if (f.tagName === "TEXTAREA") lines.push("", f.value);
-        else lines.push(text + ": " + f.value);
-      });
-      var subject = (form.getAttribute("data-mailto") || "Message from the website") + (name ? " — " + name : "");
-      if (!EMAIL) {
-        alert("The email address for this site hasn't been set up yet. Please reach Scott on Instagram or Facebook for now.");
+      if (!FORM_ENDPOINT) {
+        say("The message form is being set up. Please reach Scott on Instagram or Facebook for now.", false);
         return;
       }
-      window.location.href = mailto(subject, lines.join("\n"));
+      var data = new FormData(form);
+      var name = data.get("name") || "";
+      data.append("_subject", form.getAttribute("data-form") + (name ? " from " + name : ""));
+      button.disabled = true;
+      say("Sending…", true);
+      fetch(FORM_ENDPOINT, { method: "POST", body: data, headers: { Accept: "application/json" } })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.status);
+          form.reset();
+          say("Thank you! Your message is on its way to Scott, and he'll reply by email.", true);
+        })
+        .catch(function () {
+          say("Sorry, that didn't send. Please try again in a minute, or reach Scott on Instagram or Facebook.", false);
+        })
+        .then(function () { button.disabled = false; });
     });
   });
 
