@@ -1,5 +1,6 @@
 {
   "_how_to": "Order here = order on the site. Add a painting: add its original to tools/make_images.py, run it, add an entry here, run tools/build.py.",
+  "show_prices": false,
   "artworks": [
     {"slug": "wild-radiance", "title": "Wild Radiance", "size": "30 × 40 in", "subject": "florals", "featured": true,
      "alt": "Oil painting of purple anemone flowers glowing in sunlight against a swirling, textured background"},
