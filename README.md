@@ -6,9 +6,9 @@ Scott Michael Beckman's art portfolio, scottbeckmanart.com. A plain static site 
 
 - `index.html`, `work/`, `commissions/`, `about/`, `contact/`: the pages. Each keeps its own text.
 - `content/artworks.json`: the list of paintings (title, size, subject, description, available or not, price).
-- `assets/`: styles, scripts, fonts, images. `assets/js/site.js` holds the contact email address (top of the file).
+- `assets/`: styles, scripts, fonts, images. `assets/js/site.js` holds the Formspree form address (top of the file); `assets/js/night.js` runs the animations.
 - `portfolio/`, `availableart/`, `home/`, `new-page/`: forward old Squarespace links to the new pages.
-- `tools/make_images.py`: makes web-sized copies of paintings. `tools/build.py`: refreshes the header, footer and painting grids on every page from `artworks.json`.
+- `tools/make_images.py`: makes web-sized copies of paintings. `tools/build.py`: writes every page (home, work, commissions, about, contact) from `artworks.json`. The folders `v1/`, `v2/`, `v3/` and `versions/` are the three trial looks, kept for comparison until Scott is happy.
 - `archive/` (on Scott's PC only, not in git): full saved copy of the old Squarespace site.
 
 ## Adding a painting

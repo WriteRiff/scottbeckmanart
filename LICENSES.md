@@ -7,10 +7,8 @@ All paintings, photos of paintings, and the portrait of Scott are Scott Michael 
 | What | Where used | Source / author | License | Link | What we must do |
 |---|---|---|---|---|---|
 | PhotoSwipe 5.4.4 (large-image viewer) | Every painting grid (`assets/vendor/photoswipe/`) | Dmytro Semenov | MIT | https://github.com/dimsemenov/PhotoSwipe | Keep the license file (`assets/vendor/photoswipe/LICENSE`) |
-| Cormorant Garamond (headings font) | All pages (`assets/fonts/`) | Christian Thalmann; packaged by Fontsource | SIL Open Font License 1.1 | https://fonts.google.com/specimen/Cormorant+Garamond | Nothing for use on a website; don't sell the font file by itself |
-| Inter (body text font) | All pages (`assets/fonts/`) | Rasmus Andersson; packaged by Fontsource | SIL Open Font License 1.1 | https://rsms.me/inter/ | Same as above |
-| Bodoni Moda (headlines, Look 1) | `v1/fonts/` | Owen Earl (indestructible type*), via Fontsource | SIL Open Font License 1.1 | https://fonts.google.com/specimen/Bodoni+Moda | Nothing for website use; keep the OFL notice if the font files are passed on |
-| Jost (body text, Look 1) | `v1/fonts/` | Owen Earl (indestructible type*), via Fontsource | SIL Open Font License 1.1 | https://fonts.google.com/specimen/Jost | Same |
+| Bodoni Moda (headlines) | Main site (`assets/fonts/`) and Look 1 (`v1/fonts/`) | Owen Earl (indestructible type*), via Fontsource | SIL Open Font License 1.1 | https://fonts.google.com/specimen/Bodoni+Moda | Nothing for website use; keep the OFL notice if the font files are passed on; don't sell the font file by itself |
+| Jost (body text) | Main site (`assets/fonts/`) and Look 1 (`v1/fonts/`) | Owen Earl (indestructible type*), via Fontsource | SIL Open Font License 1.1 | https://fonts.google.com/specimen/Jost | Same |
 | Fraunces (headlines, Look 2) | `v2/fonts/` | Undercase Type, via Fontsource | SIL Open Font License 1.1 | https://github.com/undercasetype/Fraunces | Same |
 | Space Grotesk (labels, Look 2) | `v2/fonts/` | Florian Karsten, via Fontsource | SIL Open Font License 1.1 | https://github.com/floriankarsten/space-grotesk | Same |
 | Bricolage Grotesque (headlines and text, Look 3) | `v3/fonts/` | Mathieu Triay, via Fontsource | SIL Open Font License 1.1 | https://fonts.google.com/specimen/Bricolage+Grotesque | Same |
