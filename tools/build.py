@@ -16,6 +16,8 @@ ARTS = DATA["artworks"]
 BY = {a["slug"]: a for a in ARTS}
 SITE_URL = "https://scottbeckmanart.com/"   # matches the CNAME file
 PAGES = ["", "work/", "commissions/", "about/", "contact/"]   # what goes in sitemap.xml
+# Cloudflare Web Analytics: cookie-free visit counts. The token is public by design (not a secret).
+CF_BEACON = '<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon=\'{"token": "6bd2b235a4b94a8b931a893fb84fa36a"}\'></script>'
 
 ICONS = {
     "Instagram": ("https://www.instagram.com/scottbeckmanart/", '<path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0 8.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4ZM17.3 5.5a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4ZM21.9 7.1c-.1-1.6-.4-3-1.6-4.2S17.6 1.3 16 1.2C14.3 1.1 9.7 1.1 8 1.2c-1.6.1-3 .4-4.2 1.6S2.2 5.5 2.1 7.1C2 8.8 2 13.2 2.1 14.9c.1 1.6.4 3 1.6 4.2s2.6 1.5 4.2 1.6c1.7.1 6.3.1 8 0 1.6-.1 3-.4 4.2-1.6s1.5-2.6 1.6-4.2c.1-1.7.1-6.1.2-7.8Zm-2.2 9.9a3.3 3.3 0 0 1-1.8 1.8c-1.3.5-4.3.4-5.9.4s-4.6.1-5.9-.4A3.3 3.3 0 0 1 4.3 17c-.5-1.3-.4-4.3-.4-5.7s-.1-4.4.4-5.7A3.3 3.3 0 0 1 6.1 3.8C7.4 3.3 10.4 3.4 12 3.4s4.6-.1 5.9.4a3.3 3.3 0 0 1 1.8 1.8c.5 1.3.4 4.3.4 5.7s.1 4.4-.4 5.7Z"/>'),
@@ -114,11 +116,12 @@ def page(P, title, desc, body, current="", og="wild-radiance", extra_head="", ga
     <div><h2>Visit</h2><nav aria-label="Footer">{foot_nav}</nav></div>
     <div><h2>Follow</h2>{social()}</div>
   </div>
-  <div class="fine"><span>© <span data-year>2026</span> Scott Michael Beckman</span><span>All paintings and images are the artist's own; please ask before reusing them.</span></div>
+  <div class="fine"><span>© <span data-year>2026</span> Scott Michael Beckman</span><span>All paintings and images are the artist's own; please ask before reusing them.</span><span>No cookies. Visits are counted anonymously with Cloudflare Web Analytics.</span></div>
 </div></footer>
 <script src="{A}js/site.js" defer></script>
 <script src="{A}js/night.js" defer></script>
-{ps_js}</body>
+{ps_js}{CF_BEACON}
+</body>
 </html>
 """
 

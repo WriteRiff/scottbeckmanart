@@ -1,4 +1,4 @@
-/* Scott Beckman Art — small site helpers (no tracking, no cookies). */
+/* Scott Beckman Art — small site helpers (no cookies). */
 (function () {
   // ---- Form service: the one place to change it. ----
   // Formspree form address, like "https://formspree.io/f/abcdwxyz" (shown on the form's page in Formspree).
