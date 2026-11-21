@@ -3,7 +3,7 @@
   // ---- Form service: the one place to change it. ----
   // Formspree form address, like "https://formspree.io/f/abcdwxyz" (shown on the form's page in Formspree).
   // Not a secret: it's meant to sit in a public web page.
-  var FORM_ENDPOINT = "";
+  var FORM_ENDPOINT = "https://formspree.io/f/xdeglzoa";
 
   // ---- Year in the footer ----
   document.querySelectorAll("[data-year]").forEach(function (el) { el.textContent = new Date().getFullYear(); });
