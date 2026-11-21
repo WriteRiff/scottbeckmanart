@@ -26,7 +26,7 @@ jobs:
         env:
           SITES: https://scottbeckmanart.com/,https://www.scottbeckmanart.com/
           MUST_CONTAIN: Scott Michael Beckman
-          HTTPS_READY: "no"   # switch to "yes" once GitHub has issued the certificate
+          HTTPS_READY: "yes"   # "no" only while waiting for GitHub to issue a certificate
           SITE_NAME: scottbeckmanart.com
           PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
           PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
