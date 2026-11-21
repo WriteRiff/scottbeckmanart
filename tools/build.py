@@ -14,6 +14,8 @@ DATA = json.loads((SITE / "content" / "artworks.json").read_text(encoding="utf-8
 SIZES = json.loads((SITE / "assets" / "img" / "sizes.json").read_text(encoding="utf-8"))
 ARTS = DATA["artworks"]
 BY = {a["slug"]: a for a in ARTS}
+SITE_URL = "https://scottbeckmanart.com/"   # matches the CNAME file
+PAGES = ["", "work/", "commissions/", "about/", "contact/"]   # what goes in sitemap.xml
 
 ICONS = {
     "Instagram": ("https://www.instagram.com/scottbeckmanart/", '<path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0 8.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4ZM17.3 5.5a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4ZM21.9 7.1c-.1-1.6-.4-3-1.6-4.2S17.6 1.3 16 1.2C14.3 1.1 9.7 1.1 8 1.2c-1.6.1-3 .4-4.2 1.6S2.2 5.5 2.1 7.1C2 8.8 2 13.2 2.1 14.9c.1 1.6.4 3 1.6 4.2s2.6 1.5 4.2 1.6c1.7.1 6.3.1 8 0 1.6-.1 3-.4 4.2-1.6s1.5-2.6 1.6-4.2c.1-1.7.1-6.1.2-7.8Zm-2.2 9.9a3.3 3.3 0 0 1-1.8 1.8c-1.3.5-4.3.4-5.9.4s-4.6.1-5.9-.4A3.3 3.3 0 0 1 4.3 17c-.5-1.3-.4-4.3-.4-5.7s-.1-4.4.4-5.7A3.3 3.3 0 0 1 6.1 3.8C7.4 3.3 10.4 3.4 12 3.4s4.6-.1 5.9.4a3.3 3.3 0 0 1 1.8 1.8c.5 1.3.4 4.3.4 5.7s.1 4.4-.4 5.7Z"/>'),
@@ -62,6 +64,9 @@ def pswp_a(A, a, name=None, inner="", cls="frame", hidden=False):
 
 def page(P, title, desc, body, current="", og="wild-radiance", extra_head="", gallery=False):
     A = P + "assets/"
+    url = SITE_URL + (current + "/" if current else "")
+    ogw, ogh = wh(og, "lg")
+    og_alt = "Portrait of Scott Beckman" if og == "scott" else (BY[og]["title"] + ", oil painting by Scott Michael Beckman" if og in BY else "Painting by Scott Michael Beckman")
     nav ="".join(
         f'<a href="{P}{slug}/"' + (' aria-current="page"' if current == slug else "") + f'>{label}</a>'
         for slug, label in [("work", "Work"), ("commissions", "Commissions"), ("about", "About"), ("contact", "Contact")])
@@ -75,10 +80,17 @@ def page(P, title, desc, body, current="", og="wild-radiance", extra_head="", ga
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{escape(title)}</title>
 <meta name="description" content="{escape(desc)}">
+<link rel="canonical" href="{url}">
+<meta property="og:site_name" content="Scott Beckman Art">
 <meta property="og:title" content="{escape(title)}">
 <meta property="og:description" content="{escape(desc)}">
-<meta property="og:image" content="{A}img/{og}-lg.jpg">
+<meta property="og:url" content="{url}">
+<meta property="og:image" content="{SITE_URL}assets/img/{og}-lg.jpg">
+<meta property="og:image:width" content="{ogw}">
+<meta property="og:image:height" content="{ogh}">
+<meta property="og:image:alt" content="{escape(og_alt)}">
 <meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#13110f">
 <link rel="icon" href="{A}img/favicon.png">
 <script>document.documentElement.classList.add("js")</script>
@@ -521,3 +533,34 @@ write("work/index.html", work())
 write("commissions/index.html", commissions())
 write("about/index.html", about())
 write("contact/index.html", contact())
+
+
+# ------------------------------------------------------------------ OLD SQUARESPACE ADDRESSES
+# Every page address from the old site (archive/sitemap.xml) forwards to its new page,
+# so old Google results, bookmarks and shared links keep working.
+REDIRECTS = {
+    "home": "",
+    "portfolio": "work/",
+    "new-page": "contact/",
+    "availableart": "#available",
+    "availableart/p/product-1-ydar7-e8mlb-r2y28-e253a": "#av-old-barn",
+    "availableart/p/product-2-5c6mb-j8mng-zyt72-9m7dy": "#av-yellow-house",
+}
+for old, new in REDIRECTS.items():
+    to = SITE_URL + new
+    write(f"{old}/index.html", f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Moved</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="{to}">
+<meta http-equiv="refresh" content="0; url={to}">
+<script>location.replace("{to}")</script></head>
+<body><p>This page has moved: <a href="{to}">continue to Scott Beckman Art</a>.</p></body></html>
+""")
+
+
+# ------------------------------------------------------------------ SITEMAP + ROBOTS
+import datetime
+today = datetime.date.today().isoformat()
+write("sitemap.xml", '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+      + "".join(f"  <url><loc>{SITE_URL}{p}</loc><lastmod>{today}</lastmod></url>\n" for p in PAGES)
+      + "</urlset>\n")
+write("robots.txt", f"User-agent: *\nAllow: /\n\nSitemap: {SITE_URL}sitemap.xml\n")
