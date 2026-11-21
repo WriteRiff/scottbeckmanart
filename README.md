@@ -10,6 +10,14 @@ Scott Michael Beckman's art portfolio, scottbeckmanart.com. A plain static site 
 - `portfolio/`, `availableart/`, `home/`, `new-page/`: forward old Squarespace links to the new pages.
 - `tools/make_images.py`: makes web-sized copies of paintings. `tools/build.py`: writes every page (home, work, commissions, about, contact) from `artworks.json`. (The three trial looks were removed when the site went live; they're in git history, commit 91d56bf.)
 - `CNAME`: tells GitHub Pages the site's address (scottbeckmanart.com).
+- `privacy/`: privacy page. `sitemap.xml`, `robots.txt` and the old-address forwards are also written by `tools/build.py`.
+- `.github/workflows/uptime.yml`: downtime alarm, every 5 minutes on GitHub (Pushover emergency alert, repeats until acknowledged; one message when it's back). `.github/workflows/monthly-report.yml`: report to Scott's phone on the 1st of each month. Both need the repo secrets `PUSHOVER_USER`, `PUSHOVER_TOKEN` (and `CF_API_TOKEN` for visitor numbers), entered by Scott in Settings → Secrets and variables → Actions.
+
+## Accounts and dates
+
+- Domain: GoDaddy, **renews Jan 10, 2027** ($22.99/yr), auto-renew on, domain lock on, privacy on. DNS at GoDaddy: 4 A records to GitHub Pages, `www` CNAME to writeriff.github.io, Google verification TXT record (keep it).
+- Hosting: GitHub Pages (WriteRiff account, free). HTTPS certificate renewed by GitHub automatically.
+- Forms: Formspree (free plan, Scott's account). Visitor counts: Cloudflare Web Analytics (Scott's account). Search: Google Search Console (Scott's Google account).
 - `archive/` (on Scott's PC only, not in git): full saved copy of the old Squarespace site.
 
 ## Adding a painting
