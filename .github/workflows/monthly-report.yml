@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: .github/scripts
-      - name: Build and send the report
+      - name: Refresh schedules and send the report
         env:
           SITE_URL: https://scottbeckmanart.com/
           SITE_NAME: scottbeckmanart.com

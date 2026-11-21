@@ -9,8 +9,12 @@ Google's own monthly Search Console email covers what people searched for on Goo
 Never asks visitors anything. Prints nothing private: the logs of a public repository are public.
 Secrets (entered by the owner in GitHub, never printed): PUSHOVER_USER, PUSHOVER_TOKEN, CF_API_TOKEN.
 """
-import base64, json, os, re, socket, ssl, urllib.error, urllib.parse, urllib.request
+import base64, json, os, socket, ssl, urllib.error, urllib.parse, urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta, timezone
+from html import escape
+from html.parser import HTMLParser
+from xml.etree import ElementTree
 
 SITE = os.environ["SITE_URL"].rstrip("/") + "/"
 HOST = urllib.parse.urlparse(SITE).hostname
@@ -20,12 +24,27 @@ CF_TOKEN = os.environ.get("CF_API_TOKEN", "")
 USER, TOKEN = os.environ.get("PUSHOVER_USER", ""), os.environ.get("PUSHOVER_TOKEN", "")
 GH, REPO = os.environ.get("GH_TOKEN", ""), os.environ.get("REPO", "")
 UA = {"User-Agent": "monthly-site-report (GitHub Actions)"}
+LINK_TIMEOUT = 15
+BOT_BLOCKING_HOSTS = ("instagram.com", "facebook.com", "youtube.com")
+MESSAGE_LIMIT = 1024
+
+
+def open_url(url, headers=None, data=None, timeout=25):
+    req = urllib.request.Request(url, data=data, headers={**UA, **(headers or {})})
+    return urllib.request.urlopen(req, timeout=timeout)
 
 
 def get(url, headers=None, data=None, timeout=25):
-    req = urllib.request.Request(url, data=data, headers={**UA, **(headers or {})})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
+    with open_url(url, headers, data, timeout) as r:
         return r.status, r.read()
+
+
+def html_value(value):
+    return escape(str(value).replace("\r", " ").replace("\n", " "))
+
+
+def short_value(value):
+    return html_value(value if len(value) <= 40 else value[:39] + "…")
 
 
 def month_bounds(today):
@@ -49,7 +68,7 @@ def cf(start, end):
                   json.dumps({"query": q, "variables": var}).encode())
     j = json.loads(body)
     if j.get("errors"):
-        raise RuntimeError("Cloudflare: " + j["errors"][0].get("message", "error")[:80])
+        raise RuntimeError("Cloudflare query failed")
     return j["data"]["viewer"]["accounts"][0]
 
 
@@ -59,12 +78,12 @@ def visitors_section(prev_start, last_start, last_end):
     try:
         now_, before = cf(last_start, last_end), cf(prev_start, last_start)
     except Exception as e:
-        return [f"<b>Visitors</b>: couldn't read Cloudflare ({type(e).__name__})."]
+        return [f"<b>Visitors</b>: couldn't read Cloudflare ({html_value(type(e).__name__)})."]
     t = now_["total"][0] if now_["total"] else {"count": 0, "sum": {"visits": 0}}
     b = before["total"][0] if before["total"] else {"count": 0, "sum": {"visits": 0}}
-    out = [f"<b>Visitors</b>: {t['sum']['visits']} visits, {t['count']} page views "
-           f"(month before: {b['sum']['visits']} visits)"]
-    pages = ", ".join(f"{p['dimensions']['requestPath']} {p['count']}" for p in now_["pages"])
+    out = [f"<b>Visitors</b>: {html_value(t['sum']['visits'])} visits, {html_value(t['count'])} page views "
+           f"(month before: {html_value(b['sum']['visits'])} visits)"]
+    pages = ", ".join(f"{short_value(p['dimensions']['requestPath'])} {html_value(p['count'])}" for p in now_["pages"])
     if pages:
         out.append(f"<b>Top pages</b>: {pages}")
     refs = []
@@ -72,10 +91,10 @@ def visitors_section(prev_start, last_start, last_end):
         h = r["dimensions"]["refererHost"] or "typed in / bookmark"
         if h == HOST or h.endswith("." + HOST):
             continue
-        refs.append(f"{h} {r['sum']['visits']}")
+        refs.append(f"{html_value(h)} {html_value(r['sum']['visits'])}")
     if refs:
         out.append(f"<b>How people found it</b>: {', '.join(refs[:5])}")
-    dev = ", ".join(f"{d['dimensions']['deviceType']} {d['sum']['visits']}" for d in now_["devices"])
+    dev = ", ".join(f"{html_value(d['dimensions']['deviceType'])} {html_value(d['sum']['visits'])}" for d in now_["devices"])
     if dev:
         out.append(f"<b>Devices</b>: {dev}")
     return out
@@ -85,42 +104,129 @@ def downtime_section(last_start, last_end):
     try:
         _, body = get(f"https://api.github.com/repos/{REPO}/contents/state.json?ref=uptime-state",
                       {"Authorization": f"Bearer {GH}", "Accept": "application/vnd.github+json"})
-        state = json.loads(base64.b64decode(json.loads(body)["content"]))
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return "<b>Downtime</b>: none recorded."
+        return "<b>Downtime</b>: couldn't read downtime record."
     except Exception:
-        return "<b>Downtime</b>: none recorded."
-    inc = [i for i in state.get("incidents", []) if last_start.isoformat() <= i["start"][:10] < last_end.isoformat()]
-    if not inc:
-        return "<b>Downtime</b>: none." + (" (Down right now!)" if state.get("down") else "")
-    return f"<b>Downtime</b>: {len(inc)} time(s), {sum(i['minutes'] for i in inc)} minutes in all."
+        return "<b>Downtime</b>: couldn't read downtime record."
+
+    start = datetime.combine(last_start, datetime.min.time(), timezone.utc)
+    end = datetime.combine(last_end, datetime.min.time(), timezone.utc)
+    try:
+        state = json.loads(base64.b64decode(json.loads(body)["content"]))
+        down = state["down"]
+        if not isinstance(down, bool):
+            raise ValueError("Invalid downtime status")
+        intervals = [(datetime.fromisoformat(i["start"]), datetime.fromisoformat(i["end"]))
+                     for i in state.get("incidents", [])]
+        if down:
+            intervals.append((datetime.fromisoformat(state["since"]), datetime.now(timezone.utc)))
+        overlap = [min(incident_end, end) - max(incident_start, start)
+                   for incident_start, incident_end in intervals]
+    except Exception:
+        return "<b>Downtime</b>: couldn't read downtime record."
+    seconds = [duration.total_seconds() for duration in overlap if duration > timedelta(0)]
+    ongoing = " (Down right now!)" if down else ""
+    if not seconds:
+        return "<b>Downtime</b>: none." + ongoing
+    return (f"<b>Downtime</b>: {html_value(len(seconds))} time(s), "
+            f"{html_value(round(sum(seconds) / 60))} minutes in all.{ongoing}")
+
+
+class PageLinks(HTMLParser):
+    def __init__(self, body):
+        super().__init__()
+        self.links = []
+        self.ids = set()
+        self.feed(body.decode("utf-8", "replace"))
+        self.close()
+
+    def handle_starttag(self, tag, attrs):
+        for name, value in attrs:
+            if name in ("href", "src") and value:
+                self.links.append(value)
+            elif name == "id" and value:
+                self.ids.add(value)
+
+
+def fetch_page(url):
+    with open_url(url, timeout=LINK_TIMEOUT) as response:
+        return response.geturl(), PageLinks(response.read())
+
+
+def link_label(url, fragment=""):
+    parts = urllib.parse.urlsplit(url)
+    host = short_value(parts.hostname) if parts.hostname != HOST else ""
+    return host + short_value((parts.path or "/") + ("#" + fragment if fragment else ""))
+
+
+def missing_fragments(url, fragments, ids):
+    return [link_label(url, fragment) for fragment in sorted(fragments - ids)]
+
+
+def check_target(url, fragments):
+    try:
+        with open_url(url, timeout=LINK_TIMEOUT) as response:
+            if fragments:
+                return missing_fragments(url, fragments, PageLinks(response.read()).ids)
+    except urllib.error.HTTPError as e:
+        with e:
+            host = urllib.parse.urlsplit(e.geturl()).hostname or ""
+            if e.code in (401, 403, 429) and any(host == site or host.endswith("." + site) for site in BOT_BLOCKING_HOSTS):
+                return []
+            return [f"{link_label(url)} ({html_value(e.code)})"]
+    except Exception:
+        return [link_label(url)]
+    return []
 
 
 def broken_links():
     try:
-        _, sm = get(SITE + "sitemap.xml")
-        pages = re.findall(r"<loc>([^<]+)</loc>", sm.decode())
+        _, sm = get(SITE + "sitemap.xml", timeout=LINK_TIMEOUT)
+        pages = list(dict.fromkeys(loc.text.strip() for loc in ElementTree.fromstring(sm).findall(".//{*}loc")
+                                   if loc.text and loc.text.strip()))
     except Exception:
         return "<b>Broken links</b>: couldn't read the sitemap."
-    seen, bad = set(), []
-    for p in pages:
-        try:
-            _, html = get(p)
-        except Exception:
-            bad.append(urllib.parse.urlparse(p).path)
-            continue
-        for link in re.findall(r'(?:href|src)="([^"#]+)', html.decode("utf-8", "replace")):
-            u = urllib.parse.urljoin(p, link)
-            if urllib.parse.urlparse(u).hostname != HOST or u in seen:
-                continue
-            seen.add(u)
+
+    targets, cached, bad = {}, {}, []
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        page_jobs = {url: pool.submit(fetch_page, url) for url in pages}
+        for url, job in page_jobs.items():
             try:
-                get(u, timeout=20)
-            except urllib.error.HTTPError as e:
-                bad.append(f"{urllib.parse.urlparse(u).path} ({e.code})")
+                final_url, page = job.result()
             except Exception:
-                bad.append(urllib.parse.urlparse(u).path)
+                bad.append(link_label(url))
+                cached[url] = None
+                continue
+            cached[url] = cached[final_url] = page.ids
+            for link in page.links:
+                try:
+                    target, fragment = urllib.parse.urldefrag(urllib.parse.urljoin(final_url, link))
+                    parts = urllib.parse.urlsplit(target)
+                    if parts.scheme not in ("http", "https"):
+                        continue
+                    if not parts.hostname:
+                        raise ValueError("Missing link hostname")
+                except ValueError:
+                    bad.append(short_value(link))
+                    continue
+                targets.setdefault(target, set())
+                if fragment:
+                    targets[target].add(urllib.parse.unquote(fragment))
+
+        link_jobs = []
+        for url, fragments in targets.items():
+            if url not in cached:
+                link_jobs.append(pool.submit(check_target, url, fragments))
+            elif cached[url] is not None:
+                bad.extend(missing_fragments(url, fragments, cached[url]))
+        for job in link_jobs:
+            bad.extend(job.result())
+
     if not bad:
-        return f"<b>Broken links</b>: none ({len(seen)} checked)."
-    return f"<b>Broken links</b>: {len(bad)}: " + ", ".join(bad[:5])
+        return f"<b>Broken links</b>: none ({html_value(len(targets))} URLs checked)."
+    return f"<b>Broken links</b>: {html_value(len(bad))}: " + ", ".join(bad[:5])
 
 
 def cert_date():
@@ -128,9 +234,9 @@ def cert_date():
         ctx = ssl.create_default_context()
         with socket.create_connection((HOST, 443), timeout=15) as s, ctx.wrap_socket(s, server_hostname=HOST) as t:
             end = datetime.strptime(t.getpeercert()["notAfter"], "%b %d %H:%M:%S %Y %Z").date()
-        return f"<b>Security certificate</b>: OK until {end:%b %d, %Y} (GitHub renews it automatically)."
+        return f"<b>Security certificate</b>: OK until {html_value(f'{end:%b %d, %Y}')} (GitHub renews it automatically)."
     except Exception as e:
-        return f"<b>Security certificate</b>: PROBLEM ({type(e).__name__}). Check the site."
+        return f"<b>Security certificate</b>: PROBLEM ({html_value(type(e).__name__)}). Check the site."
 
 
 def domain_date():
@@ -139,40 +245,61 @@ def domain_date():
         ev = {e["eventAction"]: e["eventDate"][:10] for e in json.loads(body).get("events", [])}
         end = date.fromisoformat(ev["expiration"])
         days = (end - date.today()).days
-        warn = " RENEW SOON: check GoDaddy auto-renew." if days < 45 else ""
-        return f"<b>Domain</b>: registered until {end:%b %d, %Y} ({days} days; GoDaddy auto-renew on).{warn}"
+        warn = " Please check GoDaddy auto-renew and payment card." if days < 60 else ""
+        return f"<b>Domain</b>: registry expiry {html_value(f'{end:%b %d, %Y}')} ({html_value(days)} days).{warn}"
     except Exception:
         return "<b>Domain</b>: couldn't look up the renewal date."
 
 
 def keep_schedules_alive():
-    # GitHub pauses scheduled jobs in public repositories after 60 days without activity; re-enabling resets that.
+    success = True
     for wf in ("uptime.yml", "monthly-report.yml"):
         try:
             req = urllib.request.Request(f"https://api.github.com/repos/{REPO}/actions/workflows/{wf}/enable", method="PUT",
                                          headers={"Authorization": f"Bearer {GH}", "Accept": "application/vnd.github+json"})
-            urllib.request.urlopen(req, timeout=20).read()
+            with urllib.request.urlopen(req, timeout=20) as response:
+                if response.status != 204:
+                    raise RuntimeError("Workflow enable did not succeed")
         except Exception:
-            print("Couldn't refresh schedule for", wf)
+            print(f"::error::Couldn't refresh schedule for {wf}.")
+            success = False
+    return success
+
+
+def trim_message(lines):
+    kept = []
+    length = 0
+    for line in lines:
+        length += len(line) + bool(kept)
+        if length > MESSAGE_LIMIT:
+            break
+        kept.append(line)
+    return "\n".join(kept)
 
 
 def main():
-    keep_schedules_alive()
+    schedules_refreshed = keep_schedules_alive()
     if not (USER and TOKEN):
-        print("Pushover secrets not added yet; report not sent.")
-        return
+        print("::error::Add the Pushover secrets in GitHub to send the monthly report.")
+        return 1
     prev_start, last_start, last_end = month_bounds(date.today())
-    lines = visitors_section(prev_start, last_start, last_end)
-    lines += [downtime_section(last_start, last_end), broken_links(), cert_date(), domain_date(),
-              "Google's own Search Console email shows what people searched for."]
-    msg = "\n".join(lines)
-    if len(msg) > 1024:
-        msg = msg[:1020] + "…"
+    lines = [downtime_section(last_start, last_end), broken_links(), cert_date(), domain_date()]
+    lines += visitors_section(prev_start, last_start, last_end)
+    lines.append("Google's own Search Console email shows what people searched for.")
     data = urllib.parse.urlencode({"token": TOKEN, "user": USER, "html": 1, "priority": 0,
-                                   "title": f"{NAME}: {last_start:%B} report", "message": msg,
+                                   "title": f"{html_value(NAME)}: {html_value(f'{last_start:%B}')} report",
+                                   "message": trim_message(lines),
                                    "url": "https://dash.cloudflare.com/?to=/:account/web-analytics", "url_title": "Full numbers in Cloudflare"}).encode()
-    urllib.request.urlopen(urllib.request.Request("https://api.pushover.net/1/messages.json", data), timeout=20).read()
+    _, body = get("https://api.pushover.net/1/messages.json", data=data, timeout=20)
+    if json.loads(body).get("status") != 1:
+        raise RuntimeError("Pushover did not accept the report")
     print("Report sent.")
+    return int(not schedules_refreshed)
 
 
-main()
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except Exception:
+        print("::error::The monthly report workflow couldn't complete.")
+        raise SystemExit(1)

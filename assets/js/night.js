@@ -48,7 +48,7 @@
     var caps = document.querySelectorAll(".now .cap-item");
     var count = document.querySelector(".count");
     var pauseBtn = document.querySelector("[data-pause]");
-    var i = 0, timer = null, paused = reduce, visible = true;
+    var i = 0, timer = null, pending = null, paused = reduce, visible = true;
     // Only the painting on show can be clicked or tabbed to (it opens the large view).
     function linkState() {
       slides.forEach(function (s, k) { var a = s.querySelector("a"); if (a) a.tabIndex = k === i ? 0 : -1; });
@@ -60,20 +60,62 @@
       if (img.dataset.src) { img.src = img.dataset.src; img.removeAttribute("data-src"); }
       if (img.loading === "lazy") img.loading = "eager";
     }
-    function show(n) {
-      slides[i].classList.remove("is-on"); if (caps[i]) caps[i].classList.remove("is-on");
-      i = (n + slides.length) % slides.length;
-      fill(slides[i].querySelector("img"));
-      slides[i].classList.add("is-on"); if (caps[i]) caps[i].classList.add("is-on");
-      if (count) count.textContent = ("0" + (i + 1)).slice(-2) + " / " + ("0" + slides.length).slice(-2);
-      linkState();
+    function imageReady(img) {
+      if (!img) return Promise.resolve(false);
+      return new Promise(function (resolve) {
+        var timeout = setTimeout(failed, 3000);
+        function finish(ready) {
+          clearTimeout(timeout);
+          img.removeEventListener("load", loaded);
+          img.removeEventListener("error", failed);
+          resolve(ready);
+        }
+        function loaded() { finish(img.naturalWidth > 0); }
+        function failed() { finish(false); }
+        if (typeof img.decode === "function") {
+          img.decode().then(loaded, failed);
+        } else if (img.complete && img.naturalWidth > 0) {
+          loaded();
+        } else {
+          img.addEventListener("load", loaded);
+          img.addEventListener("error", failed);
+        }
+      });
+    }
+    async function show(n, automatic) {
+      var next = (n + slides.length) % slides.length;
+      var request = { index: next, automatic: automatic };
+      pending = request;
+      schedule();
+      if (next !== i) {
+        var img = slides[next].querySelector("img");
+        fill(img);
+        var ready = await imageReady(img);
+        if (pending !== request) return;
+        if (ready) {
+          slides[i].classList.remove("is-on"); if (caps[i]) caps[i].classList.remove("is-on");
+          i = next;
+          slides[i].classList.add("is-on"); if (caps[i]) caps[i].classList.add("is-on");
+          if (count) count.textContent = ("0" + (i + 1)).slice(-2) + " / " + ("0" + slides.length).slice(-2);
+          linkState();
+        }
+      }
+      pending = null;
+      schedule();
     }
     linkState();
     // Hold the slideshow while the large view is open.
     hero.addEventListener("click", function (e) { if (e.target.closest(".slide a")) { paused = true; setPauseLabel(); schedule(); } });
-    function schedule() { clearTimeout(timer); if (!paused && visible) timer = setTimeout(function () { show(i + 1); schedule(); }, 7000); }
+    function schedule() {
+      clearTimeout(timer);
+      if (pending && pending.automatic && (paused || !visible)) pending = null;
+      if (!paused && visible && !pending) timer = setTimeout(function () { show(i + 1, true); }, 7000);
+    }
     hero.querySelectorAll("[data-step]").forEach(function (b) {
-      b.addEventListener("click", function () { show(i + Number(b.getAttribute("data-step"))); schedule(); });
+      b.addEventListener("click", function () {
+        var from = pending && !pending.automatic ? pending.index : i;
+        show(from + Number(b.getAttribute("data-step")), false);
+      });
     });
     function setPauseLabel() {
       if (!pauseBtn) return;

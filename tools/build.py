@@ -537,7 +537,7 @@ def privacy():
   <div class="fade">
     <p class="eyebrow">Privacy</p>
     <h1>Your <em>privacy</em></h1>
-    <p class="lead">Short version: this site uses no cookies and no ad trackers, and never sells or shares your information. Updated November 21, 2026.</p>
+    <p class="lead">Short version: this site uses no cookies or ad trackers. Your information is never sold and is shared only with the services named on this page. Updated November 21, 2026.</p>
   </div>
 </section>
 <section class="section" style="padding-top:0" aria-label="Privacy details">
@@ -547,7 +547,7 @@ def privacy():
     <h2>Messages and commission requests</h2>
     <p>When you send the contact or commission form, what you type (your name, email, and phone if you add it, plus your message) goes to Scott by email through Formspree, a form service, which also keeps a copy and uses your IP address to block spam. It’s used only to reply to you and to discuss your painting. Formspree’s privacy policy: <a href="https://formspree.io/legal/privacy-policy/" rel="noopener">formspree.io/legal/privacy-policy</a>.</p>
     <h2>Hosting</h2>
-    <p>The site is hosted by GitHub Pages. Like any web host, GitHub receives your IP address when your browser loads a page and may keep it in its security logs. GitHub’s privacy statement: <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub privacy statement</a>.</p>
+    <p>The site is hosted by GitHub Pages. GitHub logs and stores visitors’ IP addresses for security. GitHub’s privacy statement: <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub privacy statement</a>.</p>
     <h2>Links to other sites</h2>
     <p>Links to Instagram, YouTube and Facebook take you to those companies’ own sites, where their privacy rules apply.</p>
     <h2>Your choices</h2>
@@ -555,7 +555,7 @@ def privacy():
   </div>
 </section>"""
     return page(P, "Privacy | Scott Beckman Art",
-                "How scottbeckmanart.com handles your information: anonymous visit counts with no cookies, and messages sent only to Scott.",
+                "How scottbeckmanart.com handles your information: anonymous visit counts with no cookies, and messages that go to Scott through Formspree.",
                 body, current="privacy")
 
 
