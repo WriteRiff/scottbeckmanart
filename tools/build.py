@@ -15,7 +15,7 @@ SIZES = json.loads((SITE / "assets" / "img" / "sizes.json").read_text(encoding="
 ARTS = DATA["artworks"]
 BY = {a["slug"]: a for a in ARTS}
 SITE_URL = "https://scottbeckmanart.com/"   # matches the CNAME file
-PAGES = ["", "work/", "commissions/", "about/", "contact/"]   # what goes in sitemap.xml
+PAGES = ["", "work/", "commissions/", "about/", "contact/", "privacy/"]   # what goes in sitemap.xml
 # Cloudflare Web Analytics: cookie-free visit counts. The token is public by design (not a secret).
 CF_BEACON = '<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon=\'{"token": "6bd2b235a4b94a8b931a893fb84fa36a"}\'></script>'
 
@@ -116,7 +116,7 @@ def page(P, title, desc, body, current="", og="wild-radiance", extra_head="", ga
     <div><h2>Visit</h2><nav aria-label="Footer">{foot_nav}</nav></div>
     <div><h2>Follow</h2>{social()}</div>
   </div>
-  <div class="fine"><span>© <span data-year>2026</span> Scott Michael Beckman</span><span>All paintings and images are the artist's own; please ask before reusing them.</span><span>No cookies. Visits are counted anonymously with Cloudflare Web Analytics.</span></div>
+  <div class="fine"><span>© <span data-year>2026</span> Scott Michael Beckman</span><span>All paintings and images are the artist's own; please ask before reusing them.</span><span>No cookies. Visits are counted anonymously. <a href="{P}privacy/">Privacy</a></span></div>
 </div></footer>
 <script src="{A}js/site.js" defer></script>
 <script src="{A}js/night.js" defer></script>
@@ -447,7 +447,7 @@ def commissions():
       <div class="full"><label for="c-msg">Your vision *</label><textarea id="c-msg" name="message" required placeholder="What would you like painted? When do you need it? Is there a hidden message you'd like in it?"></textarea></div>
       <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
       <div class="full"><button class="btn solid" type="submit">Send to Scott</button>
-        <p class="note">Your answers go to Scott by email through Formspree, a form service. They’re used only to reply to you about your commission.</p>
+        <p class="note">Your answers go to Scott by email through Formspree, a form service. They’re used only to reply to you about your commission. <a href="../privacy/">Privacy</a></p>
         <p class="form-status" role="status" aria-live="polite"></p></div>
     </form>
   </div>
@@ -514,7 +514,7 @@ def contact():
       <div><label for="m-msg">Message *</label><textarea id="m-msg" name="message" required></textarea></div>
       <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
       <div><button class="btn solid" type="submit">Send message</button>
-        <p class="note">Your name, email and message go to Scott by email through Formspree, a form service. They’re used only to reply to you.</p>
+        <p class="note">Your name, email and message go to Scott by email through Formspree, a form service. They’re used only to reply to you. <a href="../privacy/">Privacy</a></p>
         <p class="form-status" role="status" aria-live="polite"></p></div>
     </form>
   </div>
@@ -522,6 +522,35 @@ def contact():
     return page(P, "Contact | Scott Beckman Art",
                 "Send Scott Michael Beckman a message about a painting, a commission, or just to say hello.",
                 body, current="contact")
+
+
+# ------------------------------------------------------------------ PRIVACY
+def privacy():
+    P = "../"
+    body = """<section class="wrap page-head">
+  <div class="fade">
+    <p class="eyebrow">Privacy</p>
+    <h1>Your <em>privacy</em></h1>
+    <p class="lead">Short version: this site uses no cookies and no ad trackers, and never sells or shares your information. Updated November 21, 2026.</p>
+  </div>
+</section>
+<section class="section" style="padding-top:0" aria-label="Privacy details">
+  <div class="wrap legal fade">
+    <h2>Counting visits</h2>
+    <p>The site uses Cloudflare Web Analytics to count visits anonymously: which pages are viewed, the website that linked here, the type of browser and device, the country, and how fast pages load. It uses no cookies and doesn’t identify or follow you across other websites. Scott sees only totals. Cloudflare’s privacy policy: <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">cloudflare.com/privacypolicy</a>.</p>
+    <h2>Messages and commission requests</h2>
+    <p>When you send the contact or commission form, what you type (your name, email, and phone if you add it, plus your message) goes to Scott by email through Formspree, a form service, which also keeps a copy and uses your IP address to block spam. It’s used only to reply to you and to discuss your painting. Formspree’s privacy policy: <a href="https://formspree.io/legal/privacy-policy/" rel="noopener">formspree.io/legal/privacy-policy</a>.</p>
+    <h2>Hosting</h2>
+    <p>The site is hosted by GitHub Pages. Like any web host, GitHub receives your IP address when your browser loads a page and may keep it in its security logs. GitHub’s privacy statement: <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub privacy statement</a>.</p>
+    <h2>Links to other sites</h2>
+    <p>Links to Instagram, YouTube and Facebook take you to those companies’ own sites, where their privacy rules apply.</p>
+    <h2>Your choices</h2>
+    <p>You can ask Scott to see, correct or delete any message you’ve sent him. Just write through the <a href="../contact/">contact page</a>. This site isn’t directed at children under 13.</p>
+  </div>
+</section>"""
+    return page(P, "Privacy | Scott Beckman Art",
+                "How scottbeckmanart.com handles your information: anonymous visit counts with no cookies, and messages sent only to Scott.",
+                body, current="privacy")
 
 
 def write(rel, html):
@@ -536,6 +565,7 @@ write("work/index.html", work())
 write("commissions/index.html", commissions())
 write("about/index.html", about())
 write("contact/index.html", contact())
+write("privacy/index.html", privacy())
 
 
 # ------------------------------------------------------------------ OLD SQUARESPACE ADDRESSES
