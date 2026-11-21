@@ -13,6 +13,10 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
 SITES = [s.strip() for s in os.environ.get("SITES", "").split(",") if s.strip()]
+# Until GitHub has issued the site's certificate, check plain http so a pending certificate isn't an "outage".
+HTTPS_READY = os.environ.get("HTTPS_READY", "yes").lower() != "no"
+if not HTTPS_READY:
+    SITES = [s.replace("https://", "http://", 1) for s in SITES]
 MUST_CONTAIN = os.environ.get("MUST_CONTAIN", "")
 NAME = os.environ.get("SITE_NAME", "the website")
 USER, TOKEN = os.environ.get("PUSHOVER_USER", ""), os.environ.get("PUSHOVER_TOKEN", "")
@@ -92,7 +96,7 @@ def check_once(url):
         req = urllib.request.Request(url, headers={"User-Agent": "site-uptime-check (GitHub Actions)", "Cache-Control": "no-cache"})
         with urllib.request.urlopen(req, timeout=25) as r:
             final = urllib.parse.urlsplit(r.geturl())
-            if final.scheme != "https" or final.hostname != APEX_HOST:
+            if (HTTPS_READY and final.scheme != "https") or final.hostname != APEX_HOST:
                 return "final URL is not on the secure apex host"
             if r.status != 200:
                 return f"status {r.status}"
