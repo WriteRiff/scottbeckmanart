@@ -53,11 +53,17 @@
     function linkState() {
       slides.forEach(function (s, k) { var a = s.querySelector("a"); if (a) a.tabIndex = k === i ? 0 : -1; });
     }
+    // Hidden slides wait (data-src) so the first painting gets the whole connection on phones.
+    function fill(img) {
+      if (!img) return;
+      if (img.dataset.srcset) { img.srcset = img.dataset.srcset; img.removeAttribute("data-srcset"); }
+      if (img.dataset.src) { img.src = img.dataset.src; img.removeAttribute("data-src"); }
+      if (img.loading === "lazy") img.loading = "eager";
+    }
     function show(n) {
       slides[i].classList.remove("is-on"); if (caps[i]) caps[i].classList.remove("is-on");
       i = (n + slides.length) % slides.length;
-      var img = slides[i].querySelector("img");
-      if (img && img.loading === "lazy") img.loading = "eager";
+      fill(slides[i].querySelector("img"));
       slides[i].classList.add("is-on"); if (caps[i]) caps[i].classList.add("is-on");
       if (count) count.textContent = ("0" + (i + 1)).slice(-2) + " / " + ("0" + slides.length).slice(-2);
       linkState();
@@ -84,7 +90,7 @@
     document.addEventListener("visibilitychange", function () { visible = !document.hidden; schedule(); });
     // warm the next images after load
     window.addEventListener("load", function () {
-      slides.forEach(function (s) { var im = s.querySelector("img"); if (im) im.loading = "eager"; });
+      slides.forEach(function (s) { fill(s.querySelector("img")); });
     });
     schedule();
   }

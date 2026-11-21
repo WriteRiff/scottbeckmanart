@@ -173,10 +173,16 @@ def home():
     for n, (slug, _, sizes) in enumerate(hero_set):
         a = BY[slug]
         sw, sh = wh(slug, "sm"); lw, lh = wh(slug, "lg")
-        extra = ' fetchpriority="high"' if n == 0 else ""
+        # The first painting is what phones wait for: fetch it first, the hidden slides after it.
+        extra = ' fetchpriority="high"' if n == 0 else ' fetchpriority="low"'
         lazy = "" if n == 0 else ' loading="lazy"'
-        pic = (f'<img src="{A}img/{slug}-sm.jpg" srcset="{A}img/{slug}-sm.jpg {sw}w, {A}img/{slug}-lg.jpg {lw}w" sizes="{sizes}" '
+        # Hidden slides get data-src: night.js fills them in once the page has loaded (no-JS shows only the first).
+        d = "" if n == 0 else "data-"
+        pic = (f'<img {d}src="{A}img/{slug}-sm.jpg" {d}srcset="{A}img/{slug}-sm.jpg {sw}w, {A}img/{slug}-lg.jpg {lw}w" sizes="{sizes}" '
                f'width="{sw}" height="{sh}" alt="{escape(a["alt"])}"{lazy} decoding="async"{extra}>')
+        if n == 0:
+            hero_preload = (f'<link rel="preload" as="image" href="{A}img/{slug}-sm.jpg" imagesrcset="{A}img/{slug}-sm.jpg {sw}w, '
+                            f'{A}img/{slug}-lg.jpg {lw}w" imagesizes="{sizes}" fetchpriority="high">\n')
         slides.append(f'<div class="slide{" is-on" if n == 0 else ""}">' + pswp_a(A, a, inner=pic, cls="view") + '</div>')
         caps.append(f'<div class="cap-item{" is-on" if n == 0 else ""}"><span class="t">{escape(a["title"])}</span>'
                     f'<span class="m">{escape(medium(a))} · {escape(a["size"])}<span class="zoom-hint"> · Select to view up close</span></span></div>')
@@ -289,7 +295,7 @@ def home():
     return page(P, "Scott Beckman Art | Original Oil Paintings",
                 "Original oil paintings by Scott Michael Beckman: florals, animals, landscapes and portraits, painted in Central Arkansas. Commissions welcome.",
                 body, gallery=True,
-                extra_head=f'<link rel="preload" as="image" href="{A}img/wild-radiance-sm.jpg" imagesrcset="{A}img/wild-radiance-sm.jpg 900w, {A}img/wild-radiance-lg.jpg 1500w" imagesizes="(min-width: 901px) 52vh, 80vw">\n')
+                extra_head=hero_preload)
 
 
 # ------------------------------------------------------------------ WORK
